@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Analisis Dampak Aktivitas PPSNZJ Jakarta — Causal Loop Diagram | Kelompok 2</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#08121f;height:100vh;display:flex;flex-direction:column;overflow:hidden;color:#c8dff5}
+
+/* ── TOP BAR ── */
+.topbar{background:linear-gradient(90deg,#0b1a2e,#0e2240);border-bottom:1px solid #1b3460;padding:8px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:0 2px 18px rgba(0,0,0,.6)}
+.topbar h1{font-size:13px;font-weight:700;color:#d0e8ff;letter-spacing:.2px}
+.topbar p{font-size:10px;color:#5a80aa;margin-top:1px}
+.tbtn{background:rgba(70,140,255,.12);border:1px solid rgba(70,140,255,.25);color:#88b8ff;padding:4px 14px;border-radius:5px;cursor:pointer;font-size:11px;font-weight:600;transition:all .15s}
+.tbtn:hover{background:rgba(70,140,255,.22)}
+
+/* ── LAYOUT ── */
+.workspace{flex:1;display:flex;overflow:hidden;min-height:0}
+.canvas-wrap{flex:1;overflow:hidden;position:relative}
+#cld{width:100%;height:100%;display:block;cursor:grab;user-select:none}
+#cld:active{cursor:grabbing}
+
+/* ── SIDEBAR ── */
+.sidebar{width:232px;flex-shrink:0;background:#091728;border-left:1px solid #1b3460;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:13px}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:3px}
+.sb-head{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#2a5080;padding-bottom:5px;border-bottom:1px solid #122948;margin-bottom:7px}
+.lg{display:flex;align-items:center;gap:7px;font-size:10.5px;color:#7aaccc;margin-bottom:5px}
+.ld{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.pl{display:flex;align-items:center;gap:7px;font-size:10.5px;color:#7aaccc;margin-bottom:5px}
+.pline{height:2.5px;width:28px;border-radius:2px;flex-shrink:0}
+
+/* ── LOOP CARDS ── */
+.lc{background:#091525;border:1.5px solid #18334e;border-radius:7px;padding:8px 10px;cursor:pointer;transition:all .18s;margin-bottom:5px}
+.lc:hover{border-color:#2e5a90;background:#0d1f38}
+.lc.active{border-color:#5090e0;background:#0d2248;box-shadow:0 0 14px rgba(80,144,224,.18)}
+.lc-top{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.badge{font-size:10px;font-weight:900;padding:2px 7px;border-radius:4px;color:#fff;letter-spacing:.3px}
+.badge.R{background:#b83820}.badge.B{background:#1a6090}
+.lc-name{font-size:11px;font-weight:700;color:#b8d5ee}
+.lc-path{font-size:8.5px;color:#3a6585;line-height:1.65;margin-bottom:3px}
+.lc-vars{font-size:7.5px;color:#2a4f68;line-height:1.5}
+
+.infobox{font-size:9.5px;color:#3a5f80;line-height:1.7}
+.infobox b{color:#5a8aaa}
+
+/* ── INFO PANEL (on node click) ── */
+#info-panel{position:fixed;bottom:18px;left:18px;width:310px;background:#08111e;border:1.5px solid #1e3a5f;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.7);z-index:999;overflow:hidden;display:none;animation:panelIn .18s ease}
+@keyframes panelIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.ip-head{background:linear-gradient(90deg,#0e2040,#122848);padding:10px 14px;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid #1a3050}
+.ip-catbadge{font-size:8.5px;font-weight:800;padding:2px 6px;border-radius:3px;margin-right:8px;color:#fff;opacity:.85;flex-shrink:0;margin-top:2px}
+.ip-title{font-size:13px;font-weight:700;color:#d0e8ff;line-height:1.35}
+.ip-close{background:none;border:none;color:#5a8aaa;cursor:pointer;font-size:18px;line-height:1;padding:0 2px;flex-shrink:0;margin-left:8px}
+.ip-close:hover{color:#c0d8ff}
+.ip-body{padding:10px 14px;max-height:320px;overflow-y:auto}
+.ip-body::-webkit-scrollbar{width:3px}
+.ip-body::-webkit-scrollbar-thumb{background:#1e3a5f}
+.ip-loops{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}
+.ip-loop-badge{font-size:9px;font-weight:800;padding:2px 8px;border-radius:4px;color:#fff;opacity:.9}
+.ip-section{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.9px;color:#2a5078;margin:9px 0 5px;padding-bottom:3px;border-bottom:1px solid #122948}
+.ip-causal-row{display:flex;align-items:flex-start;gap:7px;margin-bottom:5px;font-size:10.5px;color:#8ab5d0;line-height:1.45}
+.ip-pol{font-weight:900;font-size:12px;flex-shrink:0;margin-top:1px}
+.ip-pol.pos{color:#2ecc71}.ip-pol.neg{color:#e74c3c}
+.ip-arrow{color:#3a6080;flex-shrink:0;margin-top:2px}
+.ip-source-item{background:#0d1e32;border-radius:5px;padding:7px 9px;margin-bottom:5px;font-size:10px;color:#7aaac5;line-height:1.55}
+.ip-source-item .ip-src-icon{color:#4a80aa;margin-right:4px}
+
+/* ── TOOLTIP (hover) ── */
+#tt{position:fixed;background:#08121f;border:1px solid #1a3050;border-radius:7px;padding:7px 11px;font-size:10px;line-height:1.55;color:#a0c8e8;max-width:220px;pointer-events:none;opacity:0;transition:opacity .12s;z-index:9999;box-shadow:0 5px 18px rgba(0,0,0,.6)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div>
+    <h1>Analisis Dampak Aktivitas PPSNZJ Jakarta &mdash; Causal Loop Diagram</h1>
+    <p>Mata Kuliah Ekologi Perkotaan Berkelanjutan &nbsp;&#183;&nbsp; Kelompok 2 &nbsp;&#183;&nbsp; 19 variabel &nbsp;&#183;&nbsp; 5 loop &nbsp;&#183;&nbsp; Klik node untuk data lapangan</p>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="tbtn" onclick="clearHL()">Semua Loop</button>
+    <button class="tbtn" onclick="resetView()">&#x2316; Reset</button>
+  </div>
+</div>
+
+<div class="workspace">
+  <div class="canvas-wrap">
+    <svg id="cld" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="aP" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M0,1.5 L8.5,5 L0,8.5Z" fill="#2ecc71"/></marker>
+        <marker id="aN" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M0,1.5 L8.5,5 L0,8.5Z" fill="#e74c3c"/></marker>
+        <marker id="aHL" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path id="aHL-p" d="M0,1 L9,5 L0,9Z" fill="#ff8844"/></marker>
+        <filter id="glow"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="shadow"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity=".45"/></filter>
+        <filter id="lbg" x="-18%" y="-38%" width="136%" height="176%">
+          <feFlood flood-color="#08121f" flood-opacity=".78" result="bg"/>
+          <feComposite in="bg" in2="SourceGraphic" operator="over"/>
+        </filter>
+        <radialGradient id="gLA" cx="22%" cy="50%"><stop offset="0%" stop-color="#27ae60" stop-opacity=".11"/><stop offset="100%" stop-color="#27ae60" stop-opacity="0"/></radialGradient>
+        <radialGradient id="gLS" cx="82%" cy="38%"><stop offset="0%" stop-color="#e67e22" stop-opacity=".09"/><stop offset="100%" stop-color="#e67e22" stop-opacity="0"/></radialGradient>
+        <radialGradient id="gLB" cx="58%" cy="86%"><stop offset="0%" stop-color="#2980b9" stop-opacity=".09"/><stop offset="100%" stop-color="#2980b9" stop-opacity="0"/></radialGradient>
+      </defs>
+      <g id="g-bg"></g>
+      <g id="g-edge"></g>
+      <g id="g-badge"></g>
+      <g id="g-node"></g>
+    </svg>
+  </div>
+
+  <div class="sidebar">
+    <div>
+      <div class="sb-head">Kategori Variabel</div>
+      <div class="lg"><div class="ld" style="background:#1a3a7a;border:2px solid #4a80d8"></div>Aktivitas Utama (Pusat)</div>
+      <div class="lg"><div class="ld" style="background:#1a5835"></div>Lingkungan Alamiah (LA)</div>
+      <div class="lg"><div class="ld" style="background:#193f68"></div>Lingkungan Binaan (LB)</div>
+      <div class="lg"><div class="ld" style="background:#6a3a10"></div>Lingkungan Sosial (LS)</div>
+    </div>
+    <div>
+      <div class="sb-head">Polaritas Hubungan</div>
+      <div class="pl"><div class="pline" style="background:#2ecc71"></div><span style="color:#2ecc71;font-weight:900">+</span>&nbsp;Positif — Jika A↑ maka B↑</div>
+      <div class="pl"><div class="pline" style="background:#e74c3c"></div><span style="color:#e74c3c;font-weight:900">−</span>&nbsp;Negatif — Jika A↑ maka B↓</div>
+    </div>
+    <div>
+      <div class="sb-head">5 Loop Feedback — Klik untuk Sorot</div>
+      <div class="lc" data-lid="R1" onclick="toggleLoop('R1',this)">
+        <div class="lc-top"><span class="badge R">R1</span><span class="lc-name">Reinforcing — Pertumbuhan Ekonomi</span></div>
+        <div class="lc-path">Aktivitas <b>(+)</b>→ Lapangan Kerja <b>(+)</b>→ Migrasi Pekerja <b>(+)</b>→ Pertumbuhan Ekonomi <b>(+)</b>→ Aktivitas</div>
+        <div class="lc-vars" style="color:#8a5a4a">Semua (+) → loop memperkuat sendiri | Var: 0,13,14,16</div>
+      </div>
+      <div class="lc" data-lid="R2" onclick="toggleLoop('R2',this)">
+        <div class="lc-top"><span class="badge R">R2</span><span class="lc-name">Reinforcing — Ekonomi UMKM</span></div>
+        <div class="lc-path">Aktivitas <b>(+)</b>→ Aktivitas UMKM <b>(+)</b>→ Pertumbuhan Ekonomi <b>(+)</b>→ Aktivitas</div>
+        <div class="lc-vars" style="color:#8a5a4a">Semua (+) → loop memperkuat sendiri | Var: 0,15,16</div>
+      </div>
+      <div class="lc" data-lid="B1" onclick="toggleLoop('B1',this)">
+        <div class="lc-top"><span class="badge B">B1</span><span class="lc-name">Balancing — Degradasi Ekosistem Laut</span></div>
+        <div class="lc-path">Aktivitas <b>(+)</b>→ Tumpahan BBM <b>(+)</b>→ Prod. Sampah <b>(+)</b>→ Beban IPAL <b>(+)</b>→ Pencemaran Air <b style="color:#e74c3c">(−)</b>→ Biota Laut <b>(+)</b>→ Aktivitas</div>
+        <div class="lc-vars" style="color:#3a6580">1 polaritas (−) → membatasi pertumbuhan | Var: 0,1,4,6,2,3</div>
+      </div>
+      <div class="lc" data-lid="B2" onclick="toggleLoop('B2',this)">
+        <div class="lc-top"><span class="badge B">B2</span><span class="lc-name">Balancing — Kemacetan &amp; Ketimpangan</span></div>
+        <div class="lc-path">Aktivitas <b>(+)</b>→ Kerusakan Jalan <b>(+)</b>→ Kemacetan <b>(+)</b>→ Pen. Udara <b>(+)</b>→ Ketimpangan <b style="color:#e74c3c">(−)</b>→ Kesehatan <b>(+)</b>→ Pertumbuhan Ekonomi <b>(+)</b>→ Aktivitas</div>
+        <div class="lc-vars" style="color:#3a6580">1 polaritas (−) → membatasi pertumbuhan | Var: 0,11,12,5,18,17,16</div>
+      </div>
+      <div class="lc" data-lid="B3" onclick="toggleLoop('B3',this)">
+        <div class="lc-top"><span class="badge B">B3</span><span class="lc-name">Balancing — Subsidence &amp; Banjir</span></div>
+        <div class="lc-path">Aktivitas <b>(+)</b>→ Penurunan Muka Tanah <b>(+)</b>→ Intrusi Air Laut <b>(+)</b>→ Penyumbatan Drainase <b>(+)</b>→ Genangan &amp; Banjir <b style="color:#e74c3c">(−)</b>→ Kesehatan <b>(+)</b>→ Pertumbuhan Ekonomi <b>(+)</b>→ Aktivitas</div>
+        <div class="lc-vars" style="color:#3a6580">1 polaritas (−) → membatasi pertumbuhan | Var: 0,7,8,9,10,17,16</div>
+      </div>
+    </div>
+    <div>
+      <div class="sb-head">Penghubung Lintas-Loop</div>
+      <div class="infobox">
+        <b>Produksi Sampah &amp; Limbah</b> — menguatkan B1 (via IPAL) dan B3 (via Penyumbatan Drainase)<br><br>
+        <b>Kesehatan Masyarakat</b> — simpul bersama B2 &amp; B3<br><br>
+        <b>Pertumbuhan Ekonomi</b> — simpul bersama R1, R2, B2, B3<br><br>
+        <b>Migrasi Pekerja</b> — juga menuju Ketimpangan (+) dan Kesehatan (−)
+      </div>
+    </div>
+    <div>
+      <div class="sb-head">Panduan</div>
+      <div class="infobox">
+        <b>Klik node</b>: buka detail &amp; sumber data<br>
+        <b>Hover</b>: tooltip singkat<br>
+        <b>Scroll</b>: zoom &nbsp;·&nbsp; <b>Drag</b>: geser<br>
+        <b>Klik loop card</b>: sorot jalur<br><br>
+        <span style="color:#5a9a5a"><b>R</b> = Reinforcing: semakin memperkuat</span><br>
+        <span style="color:#3a6aaa"><b>B</b> = Balancing: membatasi via (−)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INFO PANEL (click) -->
+<div id="info-panel">
+  <div class="ip-head">
+    <div style="display:flex;align-items:flex-start;flex:1;min-width:0">
+      <span class="ip-catbadge" id="ip-catbadge">LA</span>
+      <div class="ip-title" id="ip-title">Variabel</div>
+    </div>
+    <button class="ip-close" onclick="closePanel()">&#215;</button>
+  </div>
+  <div class="ip-body">
+    <div class="ip-loops" id="ip-loops"></div>
+    <div class="ip-section">&#8596; Hubungan Kausal (Jika–Maka)</div>
+    <div id="ip-causal"></div>
+    <div class="ip-section">&#128205; Sumber Data Lapangan</div>
+    <div id="ip-source"></div>
+  </div>
+</div>
+
+<!-- TOOLTIP (hover) -->
+<div id="tt"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// NODE DATA — 19 variabel, semua masuk loop
+// ═══════════════════════════════════════════════
+const NODES = [
+  {id:0, name:"Aktivitas Pelabuhan PPSNZJ",
+   lbl:["Aktivitas Pelabuhan","PPSNZJ"],
+   x:550, y:388, cat:"center",
+   loops:["R1","R2","B1","B2","B3"],
+   tip:"Pusat sistem. Hover = tooltip, klik = data lengkap.",
+   causal:[
+     {dir:"out",to:1,pol:"+",text:"Aktivitas↑ → Tumpahan BBM↑"},
+     {dir:"out",to:4,pol:"+",text:"Aktivitas↑ → Produksi Sampah↑ (langsung)"},
+     {dir:"out",to:5,pol:"+",text:"Aktivitas↑ → Pencemaran Udara↑ (emisi kapal)"},
+     {dir:"out",to:7,pol:"+",text:"Aktivitas↑ → Penurunan Muka Tanah↑"},
+     {dir:"out",to:11,pol:"+",text:"Aktivitas↑ → Kerusakan Jalan↑"},
+     {dir:"out",to:13,pol:"+",text:"Aktivitas↑ → Lapangan Kerja↑"},
+     {dir:"out",to:15,pol:"+",text:"Aktivitas↑ → Aktivitas UMKM↑"},
+     {dir:"in",from:3,pol:"+",text:"Jika Biota Laut↑ → Aktivitas↑"},
+     {dir:"in",from:16,pol:"+",text:"Jika Pertumbuhan Ekonomi↑ → Aktivitas↑"},
+   ],
+   source:[
+     {icon:"📊",text:"Data 2026: 95.128 ton tangkapan ikan, nilai produksi Rp2,02 triliun, 770 kapal bersandar"},
+     {icon:"🏭",text:"PPSNZJ adalah pelabuhan perikanan samudera terbesar di Indonesia, berlokasi di Penjaringan, Jakarta Utara"},
+     {icon:"🚢",text:"Aktivitas meliputi bongkar muat ikan, pengisian BBM kapal, distribusi logistik, pengolahan ikan"},
+   ]},
+
+  // ── B1 loop nodes ──
+  {id:1, name:"Tumpahan BBM / Minyak",
+   lbl:["Tumpahan BBM","/ Minyak"],
+   x:185, y:128, cat:"LA", loops:["B1"],
+   tip:"[LA · B1] Tumpahan BBM di dermaga → Pencemaran Air Laut",
+   causal:[
+     {dir:"in",from:0,pol:"+",text:"Jika Aktivitas↑ → Tumpahan BBM↑"},
+     {dir:"out",to:4,pol:"+",text:"Tumpahan BBM↑ → Produksi Sampah & Limbah total↑"},
+   ],
+   source:[
+     {icon:"👁️",text:"Observasi lapangan: lapisan minyak terlihat jelas di permukaan air dermaga barat"},
+     {icon:"📝",text:"Tumpahan solar dan oli mesin dari kapal nelayan saat pengisian bahan bakar"},
+     {icon:"🌊",text:"Tumpahan minyak merupakan salah satu kontributor utama pencemaran perairan PPSNZJ"},
+   ]},
+
+  {id:4, name:"Produksi Sampah & Limbah",
+   lbl:["Produksi Sampah","& Limbah"],
+   x:152, y:272, cat:"LA", loops:["B1"],
+   tip:"[LA · B1] Produksi limbah melebihi kapasitas IPAL",
+   causal:[
+     {dir:"in",from:1,pol:"+",text:"Jika Tumpahan BBM↑ → Produksi Sampah total↑"},
+     {dir:"in",from:0,pol:"+",text:"Jika Aktivitas↑ → Produksi Sampah↑ (langsung)"},
+     {dir:"out",to:6,pol:"+",text:"Produksi Sampah↑ → Beban IPAL↑"},
+     {dir:"out",to:2,pol:"+",text:"Produksi Sampah↑ → Pencemaran Air↑ (langsung)"},
+     {dir:"out",to:9,pol:"+",text:"Produksi Sampah↑ → Penyumbatan Drainase↑"},
+   ],
+   source:[
+     {icon:"👁️",text:"Observasi: sampah plastik, sisa pengolahan ikan, limbah cair, dan oli menggenang di dermaga"},
+     {icon:"📝",text:"Limbah padat: kotak styrofoam, plastik, sisa ikan. Limbah cair: air bilasan ikan, darah ikan, minyak"},
+     {icon:"🏭",text:"Kapasitas produksi 95.128 ton/tahun menghasilkan volume limbah sangat besar yang melebihi kapasitas IPAL"},
+   ]},
+
+  {id:6, name:"IPAL & Pengelolaan Limbah",
+   lbl:["IPAL &","Pengelolaan Limbah"],
+   x:208, y:392, cat:"LB", loops:["B1"],
+   tip:"[LB · B1] Beban IPAL melampaui kapasitas → limbah meluap ke laut",
+   causal:[
+     {dir:"in",from:4,pol:"+",text:"Jika Produksi Sampah↑ → Beban IPAL↑"},
+     {dir:"out",to:2,pol:"+",text:"Beban IPAL melampaui kapasitas → Pencemaran Air↑"},
+   ],
+   source:[
+     {icon:"🏗️",text:"IPAL PPSNZJ tidak memadai untuk menampung volume limbah aktual dari 95.128 ton produksi per tahun"},
+     {icon:"📝",text:"Wawancara pengelola: kapasitas IPAL terbatas, sering overload terutama saat musim puncak pendaratan ikan"},
+     {icon:"⚠️",text:"Limbah yang tidak tertangani IPAL mengalir langsung ke perairan Teluk Jakarta dan Laut Jawa"},
+   ]},
+
+  {id:2, name:"Pencemaran Air Laut",
+   lbl:["Pencemaran","Air Laut"],
+   x:165, y:510, cat:"LA", loops:["B1"],
+   tip:"[LA · B1] Pencemaran air → Biota Laut menurun (−)",
+   causal:[
+     {dir:"in",from:6,pol:"+",text:"Jika Beban IPAL↑ (tak memadai) → Pencemaran Air↑"},
+     {dir:"in",from:4,pol:"+",text:"Jika Produksi Sampah↑ → Pencemaran Air↑"},
+     {dir:"out",to:3,pol:"-",text:"Pencemaran Air↑ → Biota Laut & Ekosistem↓"},
+     {dir:"out",to:17,pol:"-",text:"Pencemaran Air↑ → Kesehatan Masyarakat↓"},
+   ],
+   source:[
+     {icon:"👁️",text:"Observasi: air keruh kecoklatan, bau amonia menyengat, lapisan minyak di permukaan air di sekitar dermaga"},
+     {icon:"💊",text:"Wawancara: ABK banyak yang berobat ke apotek dengan keluhan gatal-gatal dan infeksi kulit"},
+     {icon:"🌊",text:"Perairan sekitar PPSNZJ termasuk dalam kategori tercemar berat berdasarkan kondisi visual dan olfaktori"},
+   ]},
+
+  {id:3, name:"Biota Laut & Ekosistem",
+   lbl:["Biota Laut","& Ekosistem"],
+   x:240, y:605, cat:"LA", loops:["B1"],
+   tip:"[LA · B1] Biota↓ → Aktivitas Pelabuhan↓ (loop menyeimbangkan)",
+   causal:[
+     {dir:"in",from:2,pol:"-",text:"Jika Pencemaran Air↑ → Biota Laut↓ (hubungan NEGATIF)"},
+     {dir:"out",to:0,pol:"+",text:"Jika Biota Laut↑ → Aktivitas Pelabuhan↑"},
+   ],
+   source:[
+     {icon:"🐟",text:"Penurunan kualitas biota laut di sekitar PPSNZJ terbukti dari perubahan warna dan kekeruhan air"},
+     {icon:"📊",text:"Produksi ikan masih 95.128 ton (2026), namun didominasi kapal besar yang beroperasi jauh ke laut lepas"},
+     {icon:"🌿",text:"Ekosistem mangrove dan terumbu karang di perairan Penjaringan mengalami degradasi signifikan"},
+   ]},
+
+  // ── B3 loop nodes ──
+  {id:7, name:"Penurunan Muka Tanah",
+   lbl:["Penurunan","Muka Tanah"],
+   x:338, y:668, cat:"LA", loops:["B3"],
+   tip:"[LA · B3] Penurunan tanah → Intrusi Air Laut → Banjir",
+   causal:[
+     {dir:"in",from:0,pol:"+",text:"Jika Aktivitas↑ → beban konstruksi & ekstraksi air tanah↑ → Penurunan Muka Tanah↑"},
+     {dir:"out",to:8,pol:"+",text:"Penurunan Muka Tanah↑ → Intrusi & Rembesan Air Laut↑"},
+     {dir:"out",to:11,pol:"+",text:"Penurunan Muka Tanah↑ → Kerusakan Jalan↑"},
+   ],
+   source:[
+     {icon:"👁️",text:"Observasi KUNCI: jalan yang dibangun lebih tinggi dari bangunan lama di sekitarnya — bukti nyata penurunan tanah"},
+     {icon:"🏚️",text:"Pintu rumah warga setengah tenggelam di dalam tanah, dinding bangunan tua retak-retak secara diagonal"},
+     {icon:"📏",text:"Kawasan Penjaringan mengalami penurunan muka tanah hingga 25-30 cm/tahun (salah satu tertinggi di Jakarta)"},
+   ]},
+
+  {id:8, name:"Intrusi & Rembesan Air Laut",
+   lbl:["Intrusi &","Rembesan Air Laut"],
+   x:470, y:718, cat:"LA", loops:["B3"],
+   tip:"[LA · B3] Intrusi air laut → Penyumbatan Drainase",
+   causal:[
+     {dir:"in",from:7,pol:"+",text:"Jika Penurunan Muka Tanah↑ → Intrusi Air Laut↑"},
+     {dir:"out",to:9,pol:"+",text:"Intrusi Air Laut↑ → Penyumbatan Drainase↑ (sedimen & backflow)"},
+   ],
+   source:[
+     {icon:"👁️",text:"Observasi: air laut merembes ke daratan melalui celah-celah di jalan dan fondasi bangunan"},
+     {icon:"🌊",text:"Rob (banjir pasang) semakin sering dan tinggi di kawasan Penjaringan — diperparah penurunan muka tanah"},
+     {icon:"📝",text:"Beberapa titik di kawasan pelabuhan tergenang meski tidak hujan, akibat rembesan air laut"},
+   ]},
+
+  {id:9, name:"Penyumbatan Drainase",
+   lbl:["Penyumbatan","Drainase"],
+   x:600, y:715, cat:"LB", loops:["B3"],
+   tip:"[LB · B3] Penyumbatan Drainase → Genangan & Banjir",
+   causal:[
+     {dir:"in",from:8,pol:"+",text:"Jika Intrusi Air Laut↑ → Penyumbatan Drainase↑"},
+     {dir:"in",from:4,pol:"+",text:"Jika Produksi Sampah↑ → Penyumbatan Drainase↑ (sampah masuk saluran)"},
+     {dir:"out",to:10,pol:"+",text:"Penyumbatan Drainase↑ → Genangan & Banjir↑"},
+   ],
+   source:[
+     {icon:"👁️",text:"Observasi langsung: saluran drainase penuh sampah dan sedimen, air meluap ke permukaan jalan"},
+     {icon:"🔧",text:"Drainase tersumbat kombinasi sampah padat, lumpur, dan backflow air laut dari penurunan tanah"},
+     {icon:"📝",text:"Warga sekitar melaporkan genangan setiap kali hujan meski intensitas rendah, akibat kapasitas drainase yang turun"},
+   ]},
+
+  {id:10, name:"Genangan & Banjir",
+   lbl:["Genangan","& Banjir"],
+   x:718, y:692, cat:"LB", loops:["B3"],
+   tip:"[LB · B3] Genangan → Kesehatan Masyarakat↓ (−)",
+   causal:[
+     {dir:"in",from:9,pol:"+",text:"Jika Penyumbatan Drainase↑ → Genangan & Banjir↑"},
+     {dir:"out",to:17,pol:"-",text:"Genangan & Banjir↑ → Kesehatan Masyarakat↓ (hubungan NEGATIF)"},
+     {dir:"out",to:11,pol:"+",text:"Genangan & Banjir↑ → Kerusakan Jalan↑"},
+   ],
+   source:[
+     {icon:"👁️",text:"Observasi: genangan di beberapa titik jalan dan permukiman sekitar PPSNZJ setelah hujan ringan sekalipun"},
+     {icon:"🌊",text:"Banjir rob semakin tinggi dan sering — kawasan pesisir Penjaringan sangat rentan terhadap banjir pasang"},
+     {icon:"🏥",text:"Genangan menjadi media penularan penyakit kulit, diare, dan infeksi saluran pernapasan di kawasan pesisir"},
+   ]},
+
+  // ── B2 loop nodes ──
+  {id:11, name:"Kerusakan Jalan",
+   lbl:["Kerusakan","Jalan"],
+   x:818, y:648, cat:"LB", loops:["B2"],
+   tip:"[LB · B2] Kerusakan Jalan → Kemacetan Lalu Lintas",
+   causal:[
+     {dir:"in",from:0,pol:"+",text:"Jika Aktivitas↑ → kendaraan logistik berat↑ → Kerusakan Jalan↑"},
+     {dir:"in",from:7,pol:"+",text:"Jika Penurunan Muka Tanah↑ → Kerusakan Jalan↑"},
+     {dir:"in",from:10,pol:"+",text:"Jika Genangan & Banjir↑ → Kerusakan Jalan↑"},
+     {dir:"out",to:12,pol:"+",text:"Kerusakan Jalan↑ → Kemacetan Lalu Lintas↑"},
+   ],
+   source:[
+     {icon:"👁️",text:"Observasi: jalan di sekitar PPSNZJ berlubang parah, aspal terbelah, beberapa ruas ambles dan tergenang"},
+     {icon:"🚛",text:"Ratusan truk logistik besar melintasi jalan harian, beban jauh melebihi kapasitas desain jalan"},
+     {icon:"📏",text:"Beberapa ruas jalan ditinggikan secara berkala untuk menyesuaikan penurunan tanah — biaya besar dan tidak efisien"},
+   ]},
+
+  {id:12, name:"Kemacetan Lalu Lintas",
+   lbl:["Kemacetan","Lalu Lintas"],
+   x:938, y:618, cat:"LB", loops:["B2"],
+   tip:"[LB · B2] Kemacetan → Pencemaran Udara & Kebisingan",
+   causal:[
+     {dir:"in",from:11,pol:"+",text:"Jika Kerusakan Jalan↑ → Kemacetan Lalu Lintas↑"},
+     {dir:"out",to:5,pol:"+",text:"Kemacetan↑ → Pencemaran Udara & Kebisingan↑"},
+   ],
+   source:[
+     {icon:"👁️",text:"Observasi: kemacetan parah di Jl. Muara Baru dan akses utama PPSNZJ, terutama pagi dan sore hari"},
+     {icon:"🚛",text:"Truk pengangkut ikan, kendaraan BBM, dan kendaraan pekerja bercampur dengan lalu lintas umum"},
+     {icon:"📦",text:"Kemacetan memperlambat distribusi ikan segar — hasil tangkapan berisiko menurun kualitasnya sebelum sampai ke pasar"},
+   ]},
+
+  {id:5, name:"Pencemaran Udara & Kebisingan",
+   lbl:["Pencemaran Udara","& Kebisingan"],
+   x:985, y:455, cat:"LA", loops:["B2"],
+   tip:"[LA · B2] Pencemaran Udara → Ketimpangan Ekonomi↑",
+   causal:[
+     {dir:"in",from:12,pol:"+",text:"Jika Kemacetan↑ → Pencemaran Udara & Kebisingan↑"},
+     {dir:"in",from:0,pol:"+",text:"Jika Aktivitas↑ → Pencemaran Udara↑ (emisi kapal langsung)"},
+     {dir:"out",to:18,pol:"+",text:"Pencemaran Udara↑ → Ketimpangan Ekonomi↑ (beban polusi pada kelompok rentan)"},
+   ],
+   source:[
+     {icon:"👁️",text:"Observasi: asap hitam kendaraan logistik, bau solar menyengat, kebisingan mesin kapal sepanjang hari"},
+     {icon:"🚢",text:"Emisi langsung dari mesin kapal nelayan dan kapal penangkap samudera di dermaga"},
+     {icon:"📝",text:"Kelompok rentan (nelayan kecil, buruh kapal) paling terdampak polusi udara tanpa perlindungan memadai"},
+   ]},
+
+  {id:18, name:"Ketimpangan Ekonomi",
+   lbl:["Ketimpangan","Ekonomi"],
+   x:978, y:295, cat:"LS", loops:["B2"],
+   tip:"[LS · B2] Ketimpangan → Kesehatan Masyarakat↓ (−)",
+   causal:[
+     {dir:"in",from:5,pol:"+",text:"Jika Pencemaran Udara↑ → Ketimpangan↑ (polusi membebani kelompok rentan)"},
+     {dir:"in",from:14,pol:"+",text:"Jika Migrasi Pekerja↑ → Ketimpangan↑"},
+     {dir:"out",to:17,pol:"-",text:"Ketimpangan Ekonomi↑ → Kesehatan Masyarakat↓ (hubungan NEGATIF)"},
+   ],
+   source:[
+     {icon:"📝",text:"Wawancara: kesenjangan fasilitas antara kapal besar (berpendingin, GPS) vs perahu nelayan kecil sangat mencolok"},
+     {icon:"👷",text:"Buruh kapal mayoritas tanpa kontrak resmi, upah tidak menentu, tanpa jaminan sosial dan kesehatan"},
+     {icon:"📊",text:"Ketimpangan terlihat dari sewa lahan UMKM ke pelabuhan dan harga air beli Rp60.000/1.000 liter untuk aktivitas usaha"},
+   ]},
+
+  {id:17, name:"Kesehatan Masyarakat",
+   lbl:["Kesehatan","Masyarakat"],
+   x:750, y:572, cat:"LS", loops:["B2","B3"],
+   tip:"[LS · B2,B3] Kesehatan↓ → Pertumbuhan Ekonomi↓",
+   causal:[
+     {dir:"in",from:18,pol:"-",text:"Jika Ketimpangan↑ → Kesehatan Masyarakat↓ (NEGATIF)"},
+     {dir:"in",from:10,pol:"-",text:"Jika Genangan & Banjir↑ → Kesehatan Masyarakat↓ (NEGATIF)"},
+     {dir:"in",from:2,pol:"-",text:"Jika Pencemaran Air Laut↑ → Kesehatan↓ (NEGATIF) — lintas-loop"},
+     {dir:"in",from:14,pol:"-",text:"Jika Migrasi Pekerja↑ → Kesehatan cenderung↓ (kondisi kerja buruk)"},
+     {dir:"out",to:16,pol:"+",text:"Jika Kesehatan Masyarakat↑ → Pertumbuhan Ekonomi↑"},
+   ],
+   source:[
+     {icon:"💊",text:"Wawancara: ABK banyak berobat ke apotek sekitar pelabuhan — keluhan utama gatal-gatal dan infeksi kulit akibat air tercemar"},
+     {icon:"🏥",text:"Fasilitas kesehatan bagi pekerja sangat terbatas — jaminan kesehatan hanya dari bos kapal, tidak resmi"},
+     {icon:"🏚️",text:"Sanitasi permukiman di sekitar PPSNZJ buruk — MCK terbatas, sumber air bersih sulit"},
+   ]},
+
+  // ── R1 loop nodes ──
+  {id:13, name:"Lapangan Kerja",
+   lbl:["Lapangan","Kerja"],
+   x:772, y:202, cat:"LS", loops:["R1"],
+   tip:"[LS · R1] Lapangan Kerja → Migrasi Pekerja Luar Daerah",
+   causal:[
+     {dir:"in",from:0,pol:"+",text:"Jika Aktivitas Pelabuhan↑ → Lapangan Kerja↑"},
+     {dir:"out",to:14,pol:"+",text:"Lapangan Kerja↑ → Migrasi Pekerja Luar Daerah↑"},
+     {dir:"out",to:16,pol:"+",text:"Lapangan Kerja↑ → Pertumbuhan Ekonomi Lokal↑ (langsung)"},
+   ],
+   source:[
+     {icon:"👷",text:"Wawancara buruh kapal: mayoritas berasal dari Jawa Tengah (Brebes, Tegal, Pemalang), bekerja tanpa hari libur nasional"},
+     {icon:"📝",text:"Pekerjaan tersedia di sektor bongkar muat, pengolahan ikan, perawatan kapal, distribusi, dan UMKM pendukung"},
+     {icon:"🏭",text:"PPSNZJ menjadi magnet tenaga kerja dari berbagai daerah karena skala ekonominya yang besar"},
+   ]},
+
+  {id:14, name:"Migrasi Pekerja Luar Daerah",
+   lbl:["Migrasi Pekerja","Luar Daerah"],
+   x:908, y:148, cat:"LS", loops:["R1"],
+   tip:"[LS · R1] Migrasi Pekerja → Pertumbuhan Ekonomi",
+   causal:[
+     {dir:"in",from:13,pol:"+",text:"Jika Lapangan Kerja↑ → Migrasi Pekerja↑"},
+     {dir:"out",to:16,pol:"+",text:"Migrasi Pekerja↑ → Pertumbuhan Ekonomi↑ (pekerja konsumsi lokal)"},
+     {dir:"out",to:18,pol:"+",text:"Migrasi Pekerja↑ → Ketimpangan Ekonomi↑"},
+     {dir:"out",to:17,pol:"-",text:"Migrasi Pekerja↑ → Kesehatan cenderung↓ (kondisi kerja & tempat tinggal buruk)"},
+   ],
+   source:[
+     {icon:"🏠",text:"Wawancara: pekerja migran menempati mess melalui sistem calo di luar pelabuhan, kondisi padat dan tidak layak"},
+     {icon:"💼",text:"Tidak ada kontrak kerja resmi untuk sebagian besar buruh kapal — upah berdasarkan kesepakatan lisan dengan bos kapal"},
+     {icon:"🏥",text:"Jaminan kesehatan hanya dari bos kapal (tidak resmi), tanpa BPJS — pekerja rentan eksploitasi"},
+   ]},
+
+  // ── R2 loop node ──
+  {id:15, name:"Aktivitas UMKM",
+   lbl:["Aktivitas","UMKM"],
+   x:862, y:322, cat:"LS", loops:["R2"],
+   tip:"[LS · R2] Aktivitas UMKM → Pertumbuhan Ekonomi Lokal",
+   causal:[
+     {dir:"in",from:0,pol:"+",text:"Jika Aktivitas Pelabuhan↑ → Aktivitas UMKM↑"},
+     {dir:"out",to:16,pol:"+",text:"Aktivitas UMKM↑ → Pertumbuhan Ekonomi Lokal↑"},
+   ],
+   source:[
+     {icon:"🍜",text:"Wawancara UMKM: warung makan, pedagang minuman, dan kios makanan ramai saat kapal bersandar dan sepi saat kapal pergi"},
+     {icon:"💧",text:"UMKM membeli air bersih dari tangki dengan harga Rp60.000 per 1.000 liter — biaya operasional sangat tinggi"},
+     {icon:"📋",text:"UMKM menyewa lahan dari pihak pelabuhan — ketergantungan tinggi pada jadwal dan izin pengelola pelabuhan"},
+   ]},
+
+  // ── Shared node R1/R2/B2/B3 ──
+  {id:16, name:"Pertumbuhan Ekonomi Lokal",
+   lbl:["Pertumbuhan","Ekonomi Lokal"],
+   x:852, y:502, cat:"LS", loops:["R1","R2","B2","B3"],
+   tip:"[LS · R1,R2,B2,B3] Simpul bersama 4 loop. Klik untuk detail.",
+   causal:[
+     {dir:"in",from:14,pol:"+",text:"Jika Migrasi Pekerja↑ → Pertumbuhan Ekonomi↑ (konsumsi lokal)"},
+     {dir:"in",from:15,pol:"+",text:"Jika Aktivitas UMKM↑ → Pertumbuhan Ekonomi↑"},
+     {dir:"in",from:17,pol:"+",text:"Jika Kesehatan Masyarakat↑ → Pertumbuhan Ekonomi↑"},
+     {dir:"in",from:13,pol:"+",text:"Jika Lapangan Kerja↑ → Pertumbuhan Ekonomi↑ (langsung)"},
+     {dir:"out",to:0,pol:"+",text:"Pertumbuhan Ekonomi↑ → Aktivitas Pelabuhan↑ (reinvestasi)"},
+   ],
+   source:[
+     {icon:"📊",text:"Data 2026: nilai produksi ikan Rp2,02 triliun — kontribusi ekonomi PPSNZJ terhadap Jakarta dan sekitarnya sangat besar"},
+     {icon:"🏭",text:"Pertumbuhan didorong oleh volume tangkapan, jumlah kapal aktif, UMKM pendukung, dan distribusi logistik"},
+     {icon:"⚠️",text:"Pertumbuhan ekonomi yang tinggi disertai dampak negatif: pencemaran, infrastruktur rusak, ketimpangan, masalah kesehatan"},
+   ]},
+];
+
+// ═══════════════════════════════════════════════
+// EDGE DATA — semua hubungan kausal
+// ═══════════════════════════════════════════════
+const EDGES = [
+  // ── R1: 0→13→14→16→0 (+,+,+,+) ──
+  {from:0,  to:13, pol:"+", cv: 25, loops:["R1"]},
+  {from:13, to:14, pol:"+", cv:  0, loops:["R1"]},
+  {from:14, to:16, pol:"+", cv:-35, loops:["R1"]},
+  {from:16, to:0,  pol:"+", cv: 78, loops:["R1","R2","B2","B3"]},
+
+  // ── R2: 0→15→16→0 (+,+,+) ──
+  {from:0,  to:15, pol:"+", cv: 20, loops:["R2"]},
+  {from:15, to:16, pol:"+", cv:  0, loops:["R2"]},
+
+  // ── B1: 0→1→4→6→2→3→0 (+,+,+,+,−,+) ──
+  {from:0,  to:1,  pol:"+", cv: 58, loops:["B1"]},
+  {from:1,  to:4,  pol:"+", cv: 30, loops:["B1"]},
+  {from:4,  to:6,  pol:"+", cv: 25, loops:["B1"]},
+  {from:6,  to:2,  pol:"+", cv: 25, loops:["B1"]},
+  {from:2,  to:3,  pol:"-", cv:  0, loops:["B1"]},
+  {from:3,  to:0,  pol:"+", cv: 65, loops:["B1"]},
+
+  // ── B2: 0→11→12→5→18→17→16→0 (+,+,+,+,−,+,+) ──
+  {from:0,  to:11, pol:"+", cv: 15, loops:["B2"]},
+  {from:11, to:12, pol:"+", cv:  0, loops:["B2"]},
+  {from:12, to:5,  pol:"+", cv: 22, loops:["B2"]},
+  {from:5,  to:18, pol:"+", cv: 20, loops:["B2"]},
+  {from:18, to:17, pol:"-", cv:-88, loops:["B2"]},
+  {from:17, to:16, pol:"+", cv:-25, loops:["B2","B3"]},
+
+  // ── B3: 0→7→8→9→10→17→16→0 (+,+,+,+,−,+,+) ──
+  {from:0,  to:7,  pol:"+", cv:-40, loops:["B3"]},
+  {from:7,  to:8,  pol:"+", cv:  8, loops:["B3"]},
+  {from:8,  to:9,  pol:"+", cv: -8, loops:["B3"]},
+  {from:9,  to:10, pol:"+", cv:-10, loops:["B3"]},
+  {from:10, to:17, pol:"-", cv:-30, loops:["B3"]},
+
+  // ── Penghubung kausal (tidak di loop formal, tapi esensial) ──
+  {from:0,  to:4,  pol:"+", cv:-52, loops:[]},   // Aktivitas → Prod.Sampah langsung
+  {from:4,  to:2,  pol:"+", cv:-38, loops:[]},   // Prod.Sampah → Pencemaran Air langsung
+  {from:4,  to:9,  pol:"+", cv:-75, loops:[]},   // Prod.Sampah → Penyumbatan (via sampah masuk drainase)
+  {from:7,  to:11, pol:"+", cv:-45, loops:[]},   // Penurunan Tanah → Kerusakan Jalan
+  {from:10, to:11, pol:"+", cv:-22, loops:[]},   // Genangan → Kerusakan Jalan
+  {from:13, to:16, pol:"+", cv: 32, loops:[]},   // Lapangan Kerja → Pertumbuhan (langsung)
+  {from:14, to:17, pol:"-", cv: 68, loops:[]},   // Migrasi → Kesehatan↓ (kondisi kerja buruk)
+  {from:14, to:18, pol:"+", cv:  0, loops:[]},   // Migrasi → Ketimpangan
+  {from:2,  to:17, pol:"-", cv:-70, loops:[]},   // Pencemaran Air → Kesehatan↓ (lintas B1→B2/B3)
+  {from:0,  to:5,  pol:"+", cv:-30, loops:[]},   // Aktivitas → Pencemaran Udara (emisi kapal)
+];
+
+// ═══════════════════════════════════════════════
+// LOOP DEFINITIONS
+// ═══════════════════════════════════════════════
+const LOOPS = {
+  R1:{color:"#ff8844",
+    edges:new Set(["0-13","13-14","14-16","16-0"]),
+    nodes:new Set([0,13,14,16])},
+  R2:{color:"#ffd044",
+    edges:new Set(["0-15","15-16","16-0"]),
+    nodes:new Set([0,15,16])},
+  B1:{color:"#44c0ff",
+    edges:new Set(["0-1","1-4","4-6","6-2","2-3","3-0"]),
+    nodes:new Set([0,1,4,6,2,3])},
+  B2:{color:"#44ffaa",
+    edges:new Set(["0-11","11-12","12-5","5-18","18-17","17-16","16-0"]),
+    nodes:new Set([0,5,11,12,16,17,18])},
+  B3:{color:"#cc88ff",
+    edges:new Set(["0-7","7-8","8-9","9-10","10-17","17-16","16-0"]),
+    nodes:new Set([0,7,8,9,10,16,17])},
+};
+
+// Category styling
+const STYLE = {
+  center:{fill:"#1a3a7a",stroke:"#4a80d8",tc:"#daeeff",rx:65,ry:38,sw:2.5},
+  LA:    {fill:"#1a5835",stroke:"#2ecc71",tc:"#c5ffd5",rx:54,ry:30,sw:1.8},
+  LB:    {fill:"#193f68",stroke:"#3498db",tc:"#bcdeff",rx:54,ry:30,sw:1.8},
+  LS:    {fill:"#6a3a10",stroke:"#e67e22",tc:"#ffe0a8",rx:54,ry:30,sw:1.8},
+};
+const CAT_COLOR={LA:"#1e7a42",LB:"#1a5a8a",LS:"#8a4e18",center:"#2a5aaa"};
+
+// ═══════════════════════════════════════════════
+// SVG UTILS
+// ═══════════════════════════════════════════════
+const NS="http://www.w3.org/2000/svg";
+const nById=id=>NODES.find(n=>n.id===id);
+function svgEl(tag,a={},p=null){
+  const e=document.createElementNS(NS,tag);
+  for(const[k,v]of Object.entries(a))e.setAttribute(k,v);
+  if(p)p.appendChild(e);
+  return e;
+}
+const eRX=57,eRY=34;
+
+function bezier(n1,n2,hc){
+  const{x:x1,y:y1}=n1,{x:x2,y:y2}=n2;
+  const dx=x2-x1,dy=y2-y1,L=Math.max(Math.hypot(dx,dy),1);
+  const mx=(x1+x2)/2,my=(y1+y2)/2,px=-dy/L,py=dx/L,c=-hc;
+  const cx=mx+c*px,cy=my+c*py;
+  const a1=Math.atan2(cy-y1,cx-x1),sx=x1+eRX*Math.cos(a1),sy=y1+eRY*Math.sin(a1);
+  const a2=Math.atan2(cy-y2,cx-x2),ex=x2+eRX*Math.cos(a2),ey=y2+eRY*Math.sin(a2);
+  const lx=.25*sx+.5*cx+.25*ex,ly=.25*sy+.5*cy+.25*ey;
+  return{d:`M${sx.toFixed(1)},${sy.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}`,lx,ly};
+}
+
+// ═══════════════════════════════════════════════
+// DRAW
+// ═══════════════════════════════════════════════
+const gBg=document.getElementById("g-bg");
+const gEdge=document.getElementById("g-edge");
+const gBadge=document.getElementById("g-badge");
+const gNode=document.getElementById("g-node");
+const edgeEl={};
+let activeLoop=null,selectedNode=null;
+
+function drawBG(){
+  svgEl("ellipse",{cx:248,cy:375,rx:290,ry:375,fill:"url(#gLA)"},gBg);
+  svgEl("ellipse",{cx:862,cy:355,rx:275,ry:318,fill:"url(#gLS)"},gBg);
+  svgEl("ellipse",{cx:562,cy:694,rx:342,ry:138,fill:"url(#gLB)"},gBg);
+  [["LA",220,390,"#27ae60"],["LS",868,388,"#e67e22"],["LB",548,710,"#2980b9"]].forEach(([t,x,y,c])=>{
+    svgEl("text",{x,y,"text-anchor":"middle","font-size":"100","font-weight":"900",
+      fill:c,opacity:"0.04","font-family":"'Segoe UI',sans-serif","pointer-events":"none"},gBg).textContent=t;
+  });
+}
+
+function drawEdges(){
+  EDGES.forEach(edge=>{
+    const n1=nById(edge.from),n2=nById(edge.to);
+    const m=bezier(n1,n2,edge.cv);
+    const eKey=`${edge.from}-${edge.to}`;
+    const bc=edge.pol==="+"?"#2ecc71":"#e74c3c";
+    const mEnd=`url(#${edge.pol==="+"?"aP":"aN"})`;
+    const isLoop=edge.loops.length>0;
+    const sw=isLoop?"1.9":"1.5";
+    const op=isLoop?"0.58":"0.42";
+    const path=svgEl("path",{d:m.d,fill:"none",stroke:bc,
+      "stroke-width":sw,"stroke-opacity":op,"marker-end":mEnd,"data-ek":eKey},gEdge);
+    const lbl=svgEl("text",{x:m.lx.toFixed(1),y:(m.ly-5).toFixed(1),
+      "text-anchor":"middle","font-size":"12","font-weight":"900",
+      fill:bc,opacity:"0.78",filter:"url(#lbg)","pointer-events":"none"},gEdge);
+    lbl.textContent=edge.pol;
+    edgeEl[eKey]={path,lbl,bc,pol:edge.pol,isLoop};
+  });
+}
+
+// Loop label badges on diagram
+const BADGE_POS={
+  R1:{x:825,y:268},R2:{x:856,y:450},
+  B1:{x:188,y:295},B2:{x:542,y:638},B3:{x:318,y:636}
+};
+function drawBadges(){
+  Object.entries(BADGE_POS).forEach(([lid,pos])=>{
+    const ld=LOOPS[lid];
+    const g=svgEl("g",{opacity:"0","pointer-events":"none","data-badge":lid},gBadge);
+    svgEl("rect",{x:pos.x-21,y:pos.y-13,width:42,height:24,rx:5,fill:ld.color,opacity:"0.95"},g);
+    svgEl("text",{x:pos.x,y:pos.y+1,"text-anchor":"middle","dominant-baseline":"middle",
+      "font-size":"12","font-weight":"900",fill:"#fff","pointer-events":"none"},g).textContent=lid;
+  });
+}
+
+function drawNodes(){
+  NODES.forEach(nd=>{
+    const s=STYLE[nd.cat];
+    const g=svgEl("g",{"data-nid":nd.id,cursor:"pointer"},gNode);
+    if(nd.cat==="center"){
+      [13,5].forEach(ex=>{
+        svgEl("ellipse",{cx:nd.x,cy:nd.y,rx:s.rx+ex,ry:s.ry+ex,
+          fill:"none",stroke:"#4a80d8","stroke-width":"0.5",
+          opacity:ex===13?"0.18":"0.1"},g);
+      });
+    }
+    const ell=svgEl("ellipse",{cx:nd.x,cy:nd.y,rx:s.rx,ry:s.ry,
+      fill:s.fill,stroke:s.stroke,"stroke-width":s.sw,filter:"url(#shadow)"},g);
+
+    // ── CORRECT label order: top-to-bottom ──
+    const lh=14;
+    const topY=nd.y-(nd.lbl.length-1)*lh/2;
+    nd.lbl.forEach((line,j)=>{
+      svgEl("text",{x:nd.x,y:topY+j*lh,
+        "text-anchor":"middle","dominant-baseline":"middle",
+        "font-size":nd.cat==="center"?"11.5":"10.5",
+        "font-weight":"700",fill:s.tc,"pointer-events":"none"},g).textContent=line;
+    });
+
+    // Category badge (top-right of ellipse)
+    if(nd.cat!=="center"){
+      svgEl("text",{x:nd.x+s.rx-10,y:nd.y-s.ry+10,
+        "text-anchor":"middle","dominant-baseline":"middle",
+        "font-size":"7","font-weight":"800",
+        fill:s.stroke,opacity:"0.65","pointer-events":"none"},g)
+        .textContent={LA:"LA",LB:"LB",LS:"LS"}[nd.cat];
+    }
+    // Loop membership (bottom of ellipse)
+    if(nd.loops&&nd.loops.length){
+      svgEl("text",{x:nd.x,y:nd.y+s.ry-8,
+        "text-anchor":"middle","dominant-baseline":"middle",
+        "font-size":"5.8","font-weight":"900",
+        fill:"#a8ccee",opacity:"0.5","pointer-events":"none"},g)
+        .textContent=nd.loops.join(" ");
+    }
+
+    g.addEventListener("mouseenter",e=>{
+      if(selectedNode!==nd.id){
+        ell.setAttribute("stroke-width",s.sw+2.2);
+        ell.setAttribute("filter","url(#glow)");
+      }
+      document.getElementById("tt").innerHTML=nd.tip||nd.name;
+      document.getElementById("tt").style.opacity="1";
+      moveTip(e);
+    });
+    g.addEventListener("mousemove",moveTip);
+    g.addEventListener("mouseleave",()=>{
+      if(selectedNode!==nd.id){
+        ell.setAttribute("stroke-width",s.sw);
+        ell.setAttribute("filter","url(#shadow)");
+      }
+      document.getElementById("tt").style.opacity="0";
+    });
+    g.addEventListener("click",e=>{
+      e.stopPropagation();
+      document.getElementById("tt").style.opacity="0";
+      openPanel(nd);
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════
+// INFO PANEL (click)
+// ═══════════════════════════════════════════════
+const LOOP_COLOR={R1:"#b83820",R2:"#c08820",B1:"#1a6090",B2:"#1a7050",B3:"#6a3090"};
+const CAT_FILL={LA:"#1a5835",LB:"#193f68",LS:"#6a3a10",center:"#1a3a7a"};
+
+function openPanel(nd){
+  selectedNode=nd.id;
+  const panel=document.getElementById("info-panel");
+
+  // Header
+  const s=STYLE[nd.cat];
+  document.getElementById("ip-catbadge").textContent=nd.cat==="center"?"Pusat":nd.cat;
+  document.getElementById("ip-catbadge").style.background=CAT_FILL[nd.cat];
+  document.getElementById("ip-title").textContent=nd.name;
+
+  // Loops
+  const loopsEl=document.getElementById("ip-loops");
+  loopsEl.innerHTML="";
+  if(nd.loops&&nd.loops.length){
+    nd.loops.forEach(lid=>{
+      const b=document.createElement("span");
+      b.className="ip-loop-badge";
+      b.textContent=lid;
+      b.style.background=LOOP_COLOR[lid]||"#336";
+      loopsEl.appendChild(b);
+    });
+  } else {
+    const s=document.createElement("span");
+    s.style.cssText="font-size:9.5px;color:#3a5f80;font-style:italic";
+    s.textContent="Penghubung lintas-loop";
+    loopsEl.appendChild(s);
+  }
+
+  // Causal relationships
+  const causalEl=document.getElementById("ip-causal");
+  causalEl.innerHTML="";
+  if(nd.causal&&nd.causal.length){
+    nd.causal.forEach(rel=>{
+      const row=document.createElement("div");
+      row.className="ip-causal-row";
+      const pol=document.createElement("span");
+      pol.className="ip-pol "+(rel.pol==="+"?"pos":"neg");
+      pol.textContent=rel.pol==="+"?"⊕":"⊖";
+      const arr=document.createElement("span");
+      arr.className="ip-arrow";
+      arr.textContent=rel.dir==="out"?"↗":"↙";
+      const txt=document.createElement("span");
+      txt.textContent=rel.text;
+      row.append(pol,arr,txt);
+      causalEl.appendChild(row);
+    });
+  }
+
+  // Data sources
+  const srcEl=document.getElementById("ip-source");
+  srcEl.innerHTML="";
+  if(nd.source&&nd.source.length){
+    nd.source.forEach(s=>{
+      const item=document.createElement("div");
+      item.className="ip-source-item";
+      item.innerHTML=`<span class="ip-src-icon">${s.icon}</span>${s.text}`;
+      srcEl.appendChild(item);
+    });
+  }
+
+  panel.style.display="block";
+
+  // Highlight selected node visually
+  document.querySelectorAll("[data-nid]").forEach(g=>{
+    const nid=parseInt(g.getAttribute("data-nid"));
+    const n=nById(nid);const st=STYLE[n.cat];
+    const ell=g.querySelector("ellipse");if(!ell)return;
+    if(nid===nd.id){
+      ell.setAttribute("stroke","#fff");
+      ell.setAttribute("stroke-width",String(st.sw+3));
+      ell.setAttribute("filter","url(#glow)");
+    } else {
+      if(activeLoop===null){
+        ell.setAttribute("stroke",st.stroke);
+        ell.setAttribute("stroke-width",String(st.sw));
+        ell.setAttribute("filter","url(#shadow)");
+      }
+    }
+  });
+}
+
+function closePanel(){
+  document.getElementById("info-panel").style.display="none";
+  selectedNode=null;
+  if(activeLoop===null){
+    document.querySelectorAll("[data-nid]").forEach(g=>{
+      const nid=parseInt(g.getAttribute("data-nid"));
+      const nd=nById(nid);const s=STYLE[nd.cat];
+      const ell=g.querySelector("ellipse");if(!ell)return;
+      ell.setAttribute("stroke",s.stroke);
+      ell.setAttribute("stroke-width",String(s.sw));
+      ell.setAttribute("filter","url(#shadow)");
+      ell.setAttribute("opacity","1");
+      g.querySelectorAll("text").forEach(t=>t.setAttribute("opacity","1"));
+    });
+  }
+}
+document.getElementById("cld").addEventListener("click",e=>{
+  if(!e.target.closest("[data-nid]"))closePanel();
+});
+
+// ═══════════════════════════════════════════════
+// HIGHLIGHT LOOP
+// ═══════════════════════════════════════════════
+function resetHL(){
+  Object.values(edgeEl).forEach(({path,lbl,bc,pol,isLoop})=>{
+    path.setAttribute("stroke",bc);
+    path.setAttribute("stroke-width",isLoop?"1.9":"1.5");
+    path.setAttribute("stroke-opacity",isLoop?"0.58":"0.42");
+    path.setAttribute("marker-end",`url(#${pol==="+"?"aP":"aN"})`);
+    lbl.setAttribute("opacity","0.78");
+    lbl.setAttribute("font-size","12");
+  });
+  document.querySelectorAll("[data-badge]").forEach(g=>g.setAttribute("opacity","0"));
+  document.querySelectorAll("[data-nid]").forEach(g=>{
+    const nid=parseInt(g.getAttribute("data-nid"));
+    const nd=nById(nid);const s=STYLE[nd.cat];
+    const ell=g.querySelector("ellipse");if(!ell)return;
+    ell.setAttribute("fill",s.fill);
+    ell.setAttribute("stroke",nid===selectedNode?"#fff":s.stroke);
+    ell.setAttribute("stroke-width",String(nid===selectedNode?s.sw+3:s.sw));
+    ell.setAttribute("filter",nid===selectedNode?"url(#glow)":"url(#shadow)");
+    ell.setAttribute("opacity","1");
+    g.querySelectorAll("text").forEach(t=>t.setAttribute("opacity","1"));
+  });
+}
+
+function highlightLoop(lid){
+  resetHL();
+  const ld=LOOPS[lid];if(!ld)return;
+  document.getElementById("aHL-p").setAttribute("fill",ld.color);
+  Object.entries(edgeEl).forEach(([key,{path,lbl,pol}])=>{
+    if(ld.edges.has(key)){
+      path.setAttribute("stroke",ld.color);
+      path.setAttribute("stroke-width","4.5");
+      path.setAttribute("stroke-opacity","1");
+      path.setAttribute("marker-end","url(#aHL)");
+      lbl.setAttribute("opacity","1");
+      lbl.setAttribute("font-size","14");
+    } else {
+      path.setAttribute("stroke-opacity","0.07");
+      lbl.setAttribute("opacity","0.07");
+    }
+  });
+  document.querySelectorAll("[data-nid]").forEach(g=>{
+    const nid=parseInt(g.getAttribute("data-nid"));
+    const nd=nById(nid);const s=STYLE[nd.cat];
+    const ell=g.querySelector("ellipse");if(!ell)return;
+    if(ld.nodes.has(nid)){
+      ell.setAttribute("fill",s.fill);
+      ell.setAttribute("stroke",ld.color);
+      ell.setAttribute("stroke-width","4");
+      ell.setAttribute("opacity","1");
+      g.querySelectorAll("text").forEach(t=>t.setAttribute("opacity","1"));
+    } else {
+      ell.setAttribute("fill","#06101c");
+      ell.setAttribute("stroke","#10253a");
+      ell.setAttribute("stroke-width","0.7");
+      ell.setAttribute("opacity","0.28");
+      g.querySelectorAll("text").forEach(t=>t.setAttribute("opacity","0.1"));
+    }
+  });
+  const badge=document.querySelector(`[data-badge="${lid}"]`);
+  if(badge)badge.setAttribute("opacity","1");
+}
+
+function toggleLoop(lid,cardEl){
+  document.querySelectorAll(".lc").forEach(c=>c.classList.remove("active"));
+  if(activeLoop===lid){activeLoop=null;resetHL();}
+  else{activeLoop=lid;cardEl.classList.add("active");highlightLoop(lid);}
+}
+
+function clearHL(){
+  activeLoop=null;
+  document.querySelectorAll(".lc").forEach(c=>c.classList.remove("active"));
+  resetHL();
+}
+
+// ═══════════════════════════════════════════════
+// TOOLTIP
+// ═══════════════════════════════════════════════
+const tt=document.getElementById("tt");
+function moveTip(e){
+  tt.style.left=Math.min(e.clientX+14,window.innerWidth-230)+"px";
+  tt.style.top=Math.min(e.clientY-14,window.innerHeight-80)+"px";
+}
+
+// ═══════════════════════════════════════════════
+// PAN & ZOOM
+// ═══════════════════════════════════════════════
+const VW=1120,VH=810;
+let vx=0,vy=0,vs=1,dragging=false,ox=0,oy=0;
+const svg=document.getElementById("cld");
+function setVB(){svg.setAttribute("viewBox",`${vx} ${vy} ${VW/vs} ${VH/vs}`);}
+svg.addEventListener("mousedown",e=>{
+  if(e.target.closest("[data-nid]"))return;
+  dragging=true;ox=e.clientX;oy=e.clientY;
+});
+window.addEventListener("mousemove",e=>{
+  if(!dragging)return;
+  const r=svg.getBoundingClientRect(),sc=VW/r.width/vs;
+  vx-=(e.clientX-ox)*sc;vy-=(e.clientY-oy)*sc;ox=e.clientX;oy=e.clientY;setVB();
+});
+window.addEventListener("mouseup",()=>dragging=false);
+svg.addEventListener("wheel",e=>{
+  e.preventDefault();
+  const d=e.deltaY>0?.88:1.14;
+  const r=svg.getBoundingClientRect();
+  const mx=(e.clientX-r.left)/r.width*(VW/vs)+vx;
+  const my=(e.clientY-r.top)/r.height*(VH/vs)+vy;
+  vs=Math.max(0.3,Math.min(5,vs*d));
+  vx=mx-(mx-vx)/d;vy=my-(my-vy)/d;setVB();
+},{passive:false});
+function resetView(){vx=0;vy=0;vs=1;setVB();}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+drawBG();
+drawEdges();
+drawBadges();
+drawNodes();
+setVB();
+</script>
+</body>
+</html>
